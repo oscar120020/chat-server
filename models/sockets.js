@@ -7,7 +7,6 @@ class Sockets {
 
     socketsEvents(){
         this.io.on('connection', ( socket ) => {
-            console.log("socket running");
             socket.on("message-to-serve", (data) => {
                 console.log(data);
 
