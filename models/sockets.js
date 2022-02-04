@@ -1,3 +1,6 @@
+const { userConnected, userDisconnected, getAllUsers } = require("../controllers/sockets");
+const { validateJWT } = require("../helpers/jwt");
+
 class Sockets {
     constructor( io ){
         this.io = io;
@@ -6,12 +9,20 @@ class Sockets {
     }
 
     socketsEvents(){
-        this.io.on('connection', ( socket ) => {
-            socket.on("message-to-serve", (data) => {
-                console.log(data);
+        this.io.on('connection', async( socket ) => {
+            const [valid, uid] = validateJWT(socket.handshake.query["x-token"])
+            if(!valid){
+                console.log("socket no valid");
+                return socket.disconnect()
+            }
+            await userConnected(uid)
 
-                this.io.emit("message-from-serve", data)
+            socket.on("disconnect", async() => {
+                await userDisconnected(uid)
+                this.io.emit("user-list", await getAllUsers(uid))
             })
+
+            this.io.emit("user-list", await getAllUsers(uid))
         });
     }
 }
