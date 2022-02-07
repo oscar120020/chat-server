@@ -1,4 +1,4 @@
-const { userConnected, userDisconnected, getAllUsers } = require("../controllers/sockets");
+const { userConnected, userDisconnected, getAllUsers, saveMessages } = require("../controllers/sockets");
 const { validateJWT } = require("../helpers/jwt");
 
 class Sockets {
@@ -16,6 +16,13 @@ class Sockets {
                 return socket.disconnect()
             }
             await userConnected(uid)
+            socket.join(uid)
+
+            socket.on("inbox-message", async(payload) => {
+                const message = await saveMessages(payload)
+                this.io.to(payload.to).emit("inbox-message", message)
+                this.io.to(payload.from).emit("inbox-message", message)
+            })
 
             socket.on("disconnect", async() => {
                 await userDisconnected(uid)
