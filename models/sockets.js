@@ -24,6 +24,10 @@ class Sockets {
                 this.io.to(payload.from).emit("inbox-message", message)
             })
 
+            socket.on("writing", ({to, from, writing}) => {
+                this.io.to(to).emit("writing", {writing, from})
+            })
+
             socket.on("disconnect", async() => {
                 await userDisconnected(uid)
                 this.io.emit("user-list", await getAllUsers(uid))
