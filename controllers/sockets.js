@@ -4,8 +4,6 @@ const Message = require("../models/messageModel");
 const userConnected = async (uid) => {
   try {
     const user = await User.findById(uid);
-    console.log(user);
-    console.log(uid);
     user.online = true;
     await user.save();
 
