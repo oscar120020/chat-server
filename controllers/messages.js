@@ -4,6 +4,7 @@ const User = require("../models/userModel")
 const getMessages = async(req, res) => {
     const myId = req.uid
     const {from} = req.params
+    const offset = parseInt(req.query.offset)
 
     try {
         // Get messages
@@ -14,7 +15,8 @@ const getMessages = async(req, res) => {
             ]
         })
         .sort({createdAt: "desc"})
-        .limit(35)
+        .skip(offset)
+        .limit(20)
         
         // Get user
         const user = await User.findById(from)
