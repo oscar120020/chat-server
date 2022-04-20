@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const { generateJWT } = require("../helpers/jwt");
 const AWS = require("aws-sdk")
 const { v4: uuidv4 } = require('uuid');
+const sharp = require('sharp');
 
 const spacesEndpoint = new AWS.Endpoint(process.env.DIGITALOCEAN_API)
 const s3 = new AWS.S3({
@@ -186,16 +187,40 @@ const changePerfil = async(req, res) => {
     }
 
     const imageId = uuidv4()
+
+    const extraSmallImage = await sharp(image.data).resize(50).toBuffer()
+    const smallImage = await sharp(image.data).resize(100).toBuffer()
+    const mediumImage = await sharp(image.data).resize(300).toBuffer()
     
     await s3.putObject({
       ACL: 'public-read',
       Bucket: process.env.BUCKET_NAME,
-      Body: image.data,
-      Key: `${imageId}-${image.name}`
+      Body: extraSmallImage,
+      Key: `extrasmall-${imageId}-${image.name}`
     }).promise()
 
-    const imageUrl = `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/${imageId}-${image.name}`
-    const response = await User.findByIdAndUpdate(myId, {imageUrl}, {
+    await s3.putObject({
+      ACL: 'public-read',
+      Bucket: process.env.BUCKET_NAME,
+      Body: smallImage,
+      Key: `small-${imageId}-${image.name}`
+    }).promise()
+
+    await s3.putObject({
+      ACL: 'public-read',
+      Bucket: process.env.BUCKET_NAME,
+      Body: mediumImage,
+      Key: `medium-${imageId}-${image.name}`
+    }).promise()
+    
+
+    const imageUrlObject = {
+      extraSmall: `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/extrasmall-${imageId}-${image.name}`,
+      small: `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/small-${imageId}-${image.name}`,
+      medium: `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/medium-${imageId}-${image.name}`,
+    }
+
+    const response = await User.findByIdAndUpdate(myId, {imageUrl: imageUrlObject}, {
       new: true
     })
 

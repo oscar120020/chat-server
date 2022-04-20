@@ -15,8 +15,9 @@ const UserSchema = Schema({
         required: true
     },
     imageUrl: {
-        type: String,
-        required: false
+        extraSmall: String,
+        small: String,
+        medium: String,
     },
     online: {
         type: Boolean,
