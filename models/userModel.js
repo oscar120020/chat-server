@@ -14,6 +14,10 @@ const UserSchema = Schema({
         type: String,
         required: true
     },
+    imageUrl: {
+        type: String,
+        required: false
+    },
     online: {
         type: Boolean,
         default: false

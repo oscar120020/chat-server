@@ -1,6 +1,13 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { generateJWT } = require("../helpers/jwt");
+const AWS = require("aws-sdk")
+const { v4: uuidv4 } = require('uuid');
+
+const spacesEndpoint = new AWS.Endpoint(process.env.DIGITALOCEAN_API)
+const s3 = new AWS.S3({
+  endpoint: spacesEndpoint
+})
 
 //register
 const createUser = async (req, res) => {
@@ -107,10 +114,112 @@ const renewToken = async (req, res) => {
   }
 };
 
+const changeName = async (req, res) => {
+  try {
+    const myId = req.uid
+    const { name } = req.body;
+
+    response = await User.findByIdAndUpdate(myId, {name}, {
+      new: true
+    })
+
+    res.json({
+      ok:true,
+      response
+    })
+
+  } catch (err) {
+    res.json({
+      ok:false
+    })
+  }
+}
+
+const changePassword = async (req, res) => {
+  try {
+    const myId = req.uid
+    const { newPass, currentPass } = req.body;
+
+    const userDb = await User.findById(myId);
+
+    const validatePass = bcrypt.compareSync(currentPass, userDb.password);
+    if (!validatePass) {
+      return res.status(401).json({
+        ok: false,
+        msg: "La contraseña actual no es correcta",
+      });
+    }
+
+    // encrypt password
+    const salt = bcrypt.genSaltSync(10);
+    const newPassCrypt = bcrypt.hashSync(newPass, salt);
+
+    const response = await User.findByIdAndUpdate(myId, {password: newPassCrypt})
+
+    res.json({
+      ok:true,
+      response
+    })
+
+  } catch (err) {
+    res.json({
+      ok:false
+    })
+  }
+}
+
+const changePerfil = async(req, res) => {
+  const acceptFiles = ["image/png", "image/jpg", "image/jpeg"]
+  try {
+    const myId = req.uid
+    const {image} = req.files
+
+    if(!image){
+      return
+    }
+
+    if(!acceptFiles.includes(image.mimetype)){
+      return res.status(403).json({
+        ok: false,
+        msg: "archivo no permitido"
+      })
+    }
+
+    const imageId = uuidv4()
+    
+    await s3.putObject({
+      ACL: 'public-read',
+      Bucket: process.env.BUCKET_NAME,
+      Body: image.data,
+      Key: `${imageId}-${image.name}`
+    }).promise()
+
+    const imageUrl = `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/${imageId}-${image.name}`
+    const response = await User.findByIdAndUpdate(myId, {imageUrl}, {
+      new: true
+    })
+
+    res.json({
+      ok: true,
+      response
+    })
+    
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      ok: false,
+      msg: "no se pudo guardar"
+    })
+  }
+}
+
 const Login = {
   createUser,
   login,
   renewToken,
+  changeName,
+  changePassword,
+  changePerfil
 };
 
 module.exports = Login;

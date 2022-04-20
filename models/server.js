@@ -4,6 +4,9 @@ const socketio = require("socket.io")
 const path = require("path");
 const Sockets = require("./sockets");
 const cors = require("cors");
+var multer = require('multer');
+const fileUpload = require("express-fileupload")
+
 const { dbConection } = require("../database/config");
 
 class Server {
@@ -29,7 +32,10 @@ class Server {
     middlewares(){
         this.app.use(express.static(path.resolve(__dirname, "../public")))
         this.app.use(cors())
-        this.app.use(express.json())
+        this.app.use(express.json({limit: "20mb"}))
+        this.app.use(fileUpload({
+            tempFileDir: "/temp"
+        }))
 
         //Routes
         this.app.use("/api/login", require("../routes/auth"))

@@ -1,5 +1,6 @@
 const { Router } = require("express");
 const { check } = require("express-validator");
+const multer = require("multer");
 const Login = require("../controllers/auth");
 const { fieldValidator } = require("../middlewares/fieldValidator");
 const { validateJWT } = require("../middlewares/validateJWT");
@@ -23,6 +24,15 @@ router.post("/",[
 
 //renew token
 router.get("/renew", validateJWT, Login.renewToken)
+
+//update Name
+router.put("/changeName/:myId", validateJWT, Login.changeName)
+
+//Change password
+router.put("/changePassword/:myId", validateJWT, Login.changePassword)
+
+//change Perfi;
+router.post("/changePerfil/:myId", validateJWT, Login.changePerfil)
 
 
 module.exports = router
