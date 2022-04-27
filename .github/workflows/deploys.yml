@@ -17,4 +17,11 @@ jobs:
           node-version: 14
       
       - name: Install dependencies
-        run: npm install --no-audit --no-fund --no-optional
+        run: npm ci
+      
+      - name: Deployment to Heroku
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: ${{secrets.HEROKU_APP_NAME}}
+          heroku_email: ${{secrets.HEROKU_API_EMAIL}}
