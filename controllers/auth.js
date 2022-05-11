@@ -238,13 +238,38 @@ const changePerfil = async(req, res) => {
   }
 }
 
+const updateUserName = async(req, res) => {
+  try {
+    const userName = req.body.userName
+    const myId = req.uid
+
+    // console.log(username);
+    // console.log(myId);
+
+    const response = await User.findByIdAndUpdate(myId, {userName}, {new: true})
+
+    res.json({
+      ok: true,
+      response
+    })
+  } catch (error) {
+    if(error.codeName === "DuplicateKey"){
+      res.status(403).json({
+        ok: false,
+        msg: "Este nombre de usuario ya está en uso"
+      })
+    }
+  }
+}
+
 const Login = {
   createUser,
   login,
   renewToken,
   changeName,
   changePassword,
-  changePerfil
+  changePerfil,
+  updateUserName
 };
 
 module.exports = Login;

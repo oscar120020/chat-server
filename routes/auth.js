@@ -34,6 +34,9 @@ router.put("/changePassword/:myId", validateJWT, Login.changePassword)
 //change Perfi;
 router.post("/changePerfil/:myId", validateJWT, Login.changePerfil)
 
+//update user name;
+router.put("/update-username", validateJWT, Login.updateUserName)
+
 
 module.exports = router
 
