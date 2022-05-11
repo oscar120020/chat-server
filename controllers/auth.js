@@ -27,7 +27,6 @@ const createUser = async (req, res) => {
     // encrypt password
     const salt = bcrypt.genSaltSync(10);
     user.password = bcrypt.hashSync(password, salt);
-    user.userName = ""
 
     // save data
     await user.save();
@@ -41,7 +40,6 @@ const createUser = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       ok: false,
       msg: "Contacte al admin",
@@ -244,8 +242,14 @@ const updateUserName = async(req, res) => {
     const userName = req.body.userName
     const myId = req.uid
 
-    // console.log(username);
-    // console.log(myId);
+    const isUserNameUsed = await User.findOne({userName})
+
+    if(isUserNameUsed){
+      return res.status(403).json({
+        ok: false,
+        msg: "Este nombre de usuario ya está en uso"
+      })
+    }
 
     const response = await User.findByIdAndUpdate(myId, {userName}, {new: true})
 
@@ -254,12 +258,10 @@ const updateUserName = async(req, res) => {
       response
     })
   } catch (error) {
-    if(error.codeName === "DuplicateKey"){
-      res.status(403).json({
-        ok: false,
-        msg: "Este nombre de usuario ya está en uso"
-      })
-    }
+    res.status(400).json({
+      ok: false,
+      msg: error
+    })
   }
 }
 

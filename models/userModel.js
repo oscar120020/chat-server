@@ -16,7 +16,7 @@ const UserSchema = Schema({
     },
     userName: {
         type: String,
-        unique: true
+        require: false
     },
     imageUrl: {
         extraSmall: String,
