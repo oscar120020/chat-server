@@ -23,11 +23,11 @@ const createUser = async (req, res) => {
         msg: "El emial ya está en uso",
       });
     }
-
     const user = new User(req.body);
     // encrypt password
     const salt = bcrypt.genSaltSync(10);
     user.password = bcrypt.hashSync(password, salt);
+    user.userName = ""
 
     // save data
     await user.save();
@@ -43,7 +43,7 @@ const createUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       ok: false,
-      msg: "Contact the admin",
+      msg: "Contacte al admin",
     });
   }
 };
