@@ -40,6 +40,7 @@ const createUser = async (req, res) => {
       token,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       ok: false,
       msg: "Contacte al admin",
@@ -265,6 +266,120 @@ const updateUserName = async(req, res) => {
   }
 }
 
+const getFoundUsers = async (req, res) => {
+  
+  try {
+    const myId = req.uid
+    const {name} = req.body
+    
+    const myUser = await User.findById(myId);
+    const usersFound = await User.find()
+
+    const result = usersFound.map(user => {
+      if(
+        user._id != myId 
+        && user.userName.includes(name) 
+        && !myUser.friends.includes(user._id) 
+        && !myUser.requestSended.includes(user._id)
+        && !user.requestSended.includes(myId)
+      ){
+        return {
+          name: user.name,
+          userName: user.userName,
+          uid: user._id,
+          image: user.imageUrl.medium
+        }
+      }
+    }).filter(notNull => notNull !== undefined)
+
+    res.status(200).json({
+      ok: true,
+      result
+    })
+    
+  } catch (error) {
+    res.status(400).json({
+      ok: false,
+      error
+    })
+  }
+}
+
+const addFriend = async(req, res) => {
+  try {
+    const myId = req.uid
+    const {friendId, userName} = req.body
+    
+    await User.findByIdAndUpdate(friendId, {"$pull": {requestSended: myId}})
+    await User.findByIdAndUpdate(friendId, {"$push": {friends: myId}})
+    await User.findByIdAndUpdate(myId, {"$push": {friends: friendId}}, {new:true})
+    const user = await User.findByIdAndUpdate(myId, {"$pull": {requests: {userName}}}, {new: true})
+
+    res.status(200).json({
+      ok: true,
+      user
+    })
+    
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      ok: false,
+      error
+    })
+  }
+}
+
+const doFriendRequest = async(req, res) => {
+  try {
+    const myId = req.uid
+    const {friendId} = req.body
+
+    const userWhoSend = await User.findById(myId)
+
+    const newRequest = {
+      name: userWhoSend.name,
+      uid: userWhoSend._id,
+      userName: userWhoSend.userName,
+      image: userWhoSend.imageUrl?.medium
+    }
+    
+    await User.findByIdAndUpdate(friendId, {"$push": {requests: newRequest}})
+    await User.findByIdAndUpdate(myId, {"$push": {requestSended: friendId}})
+
+    res.status(200).json({
+      ok: true,
+      message: "Solicitud enviada con exito"
+    })
+    
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      ok: false,
+      error
+    })
+  }
+}
+
+const getUserById = async(req, res) => {
+  try {
+    const myId = req.uid
+
+    const user = await User.findById(myId);
+
+    res.status(200).json({
+      ok: true,
+      user
+    })
+    
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      ok: false,
+      error
+    })
+  }
+}
+
 const Login = {
   createUser,
   login,
@@ -272,7 +387,11 @@ const Login = {
   changeName,
   changePassword,
   changePerfil,
-  updateUserName
+  updateUserName,
+  getFoundUsers,
+  addFriend,
+  doFriendRequest,
+  getUserById
 };
 
 module.exports = Login;

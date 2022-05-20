@@ -18,6 +18,7 @@ class Sockets {
                 console.log("////////////usuario conectado");
                 await userConnected(uid)
                 socket.join(uid)
+                this.io.emit("state")
     
                 socket.on("inbox-message", async(payload) => {
                     const message = await saveMessages(payload)
@@ -31,11 +32,23 @@ class Sockets {
     
                 socket.on("disconnect", async() => {
                     await userDisconnected(uid)
-                    this.io.emit("user-list", await getAllUsers(uid))
+                    this.io.emit("state")
                     console.log("***********usuario desconectado");
                 })
-    
-                this.io.emit("user-list", await getAllUsers(uid))
+
+                socket.on("state", async() => {
+                    socket.emit("user-list", await getAllUsers(uid))
+                })
+
+                socket.on("user-change", ({to}) => {
+                    this.io.to(to).emit("user-change")
+                })
+
+                socket.on("update-users", ({to}) => {
+                    this.io.to(to).emit("update-users")
+                })
+
+                socket.emit("user-list", await getAllUsers(uid))
             })
         });
     }

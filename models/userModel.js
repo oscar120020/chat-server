@@ -18,6 +18,18 @@ const UserSchema = Schema({
         type: String,
         require: false
     },
+    friends: {
+        type: Array,
+        default: []
+    },
+    requests: {
+        type: Array,
+        default: []
+    },
+    requestSended: {
+        type: Array,
+        default: []
+    },
     imageUrl: {
         extraSmall: String,
         small: String,

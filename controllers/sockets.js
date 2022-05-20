@@ -28,9 +28,16 @@ const userDisconnected = async (uid) => {
 
 const getAllUsers = async (uid) => {
   try {
+    const myUser = await User.findById(uid)
     const users = await User.find().sort("-online");
 
-    return users;
+    const result = users.filter(user => {
+      if(user._id != uid && myUser.friends.includes(user._id)){
+        return user
+      }
+    })
+
+    return result;
   } catch (error) {
     console.log(error);
   }
