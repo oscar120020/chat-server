@@ -57,4 +57,7 @@ router.post("/friend-request", validateJWT, Login.doFriendRequest);
 //get user;
 router.get("/get-user", validateJWT, Login.getUserById);
 
+//get simple user;
+router.post("/get-simple-user", validateJWT, Login.getSimpleUser);
+
 module.exports = router;

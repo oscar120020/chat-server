@@ -278,16 +278,26 @@ const getFoundUsers = async (req, res) => {
     const result = usersFound.map(user => {
       if(
         user._id != myId 
-        && user.userName.includes(name) 
+        && user.userName.toLowerCase().includes(name.toLowerCase()) 
         && !myUser.friends.includes(user._id) 
-        && !myUser.requestSended.includes(user._id)
         && !user.requestSended.includes(myId)
       ){
-        return {
-          name: user.name,
-          userName: user.userName,
-          uid: user._id,
-          image: user.imageUrl.medium
+        if(myUser.requestSended.includes(user._id)){
+          return {
+            name: user.name,
+            userName: user.userName,
+            uid: user._id,
+            image: user.imageUrl.medium,
+            sended: true
+          }
+        }else{
+          return {
+            name: user.name,
+            userName: user.userName,
+            uid: user._id,
+            image: user.imageUrl.medium,
+            sended: false
+          }
         }
       }
     }).filter(notNull => notNull !== undefined)
@@ -380,6 +390,31 @@ const getUserById = async(req, res) => {
   }
 }
 
+const getSimpleUser = async(req, res) => {
+  try {
+    const myId = req.uid
+    const { userId } = req.body
+
+    const user = await User.findById(userId);
+
+    res.status(200).json({
+      ok: true,
+      user: {
+        name: user.name,
+        image: user.imageUrl.medium ?? "",
+        id: user._id
+      }
+    })
+    
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      ok: false,
+      error
+    })
+  }
+}
+
 const Login = {
   createUser,
   login,
@@ -391,7 +426,8 @@ const Login = {
   getFoundUsers,
   addFriend,
   doFriendRequest,
-  getUserById
+  getUserById,
+  getSimpleUser,
 };
 
 module.exports = Login;

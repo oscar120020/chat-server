@@ -40,6 +40,7 @@ class Server {
         //Routes
         this.app.use("/api/login", require("../routes/auth"))
         this.app.use("/api/messages", require("../routes/messages"))
+        this.app.use("/api/groups", require("../routes/group"))
     }
 
     execute(){

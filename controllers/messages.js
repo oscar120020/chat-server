@@ -1,10 +1,12 @@
 const Messages = require("../models/messageModel")
 const User = require("../models/userModel")
+const Group = require("../models/groupModel")
 
 const getMessages = async(req, res) => {
     const myId = req.uid
     const {from} = req.params
     let offset = parseInt(req.query.offset)
+    let isGroup = req.query.isGroup
 
     try {
         // Get messages
@@ -14,7 +16,8 @@ const getMessages = async(req, res) => {
         let last20Msg = await Messages.find({
             $or:[
                 {to: myId, from},
-                {to: from, from: myId}
+                {to: from, from: myId},
+                {to: from}
             ]
         })
         .sort({createdAt: "desc"})
@@ -22,7 +25,7 @@ const getMessages = async(req, res) => {
         .limit(20)
         
         // Get user
-        const user = await User.findById(from)
+        const user = isGroup === "true" ? await Group.findById(from) : await User.findById(from)
 
         // Order messages
         last20Msg = last20Msg.sort((a, b) => a.createdAt - b.createdAt)
@@ -54,7 +57,8 @@ const getFoundMessages = async(req, res) => {
         let last20Msg = await Messages.find({
             $or:[
                 {to: myId, from},
-                {to: from, from: myId}
+                {to: from, from: myId},
+                {to: from}
             ],
             message: {$regex: queryMessage, $options: "i"}
         })
@@ -85,7 +89,8 @@ const getMessagePosition = async(req, res) => {
         let allMessages = await Messages.find({
             $or:[
                 {to: myId, from},
-                {to: from, from: myId}
+                {to: from, from: myId},
+                {to: from}
             ],
         })
 

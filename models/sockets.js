@@ -1,4 +1,4 @@
-const { userConnected, userDisconnected, getAllUsers, saveMessages } = require("../controllers/sockets");
+const { userConnected, userDisconnected, getAllUsers, saveMessages, getGroups } = require("../controllers/sockets");
 const { validateJWT } = require("../helpers/jwt");
 
 class Sockets {
@@ -38,6 +38,7 @@ class Sockets {
 
                 socket.on("state", async() => {
                     socket.emit("user-list", await getAllUsers(uid))
+                    socket.emit("group-list", await getGroups(uid))
                 })
 
                 socket.on("user-change", ({to}) => {
@@ -48,7 +49,12 @@ class Sockets {
                     this.io.to(to).emit("update-users")
                 })
 
+                socket.on("connect-to-group", (uid) => {
+                    socket.join(uid)
+                })
+
                 socket.emit("user-list", await getAllUsers(uid))
+                socket.emit("group-list", await getGroups(uid))
             })
         });
     }
