@@ -22,7 +22,7 @@ const GroupSchema = Schema({
 })
 
 GroupSchema.method("toJSON", function(){
-    const { __v, _id,...object } = this.toObject();
+    const { __v, _id, ...object } = this.toObject();
     object.groupId = _id
     return object
 })

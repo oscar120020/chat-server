@@ -1,14 +1,10 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { generateJWT } = require("../helpers/jwt");
-const AWS = require("aws-sdk")
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
-
-const spacesEndpoint = new AWS.Endpoint(process.env.DIGITALOCEAN_API)
-const s3 = new AWS.S3({
-  endpoint: spacesEndpoint
-})
+const { cloudinary_upload } = require("../helpers/cloudinary");
+const fs = require('fs')
 
 //register
 const createUser = async (req, res) => {
@@ -188,41 +184,32 @@ const changePerfil = async(req, res) => {
 
     const imageId = uuidv4()
 
-    const extraSmallImage = await sharp(image.data).resize(50).toBuffer()
-    const smallImage = await sharp(image.data).resize(100).toBuffer()
-    const mediumImage = await sharp(image.data).resize(300).toBuffer()
-    
-    await s3.putObject({
-      ACL: 'public-read',
-      Bucket: process.env.BUCKET_NAME,
-      Body: extraSmallImage,
-      Key: `extrasmall-${imageId}-${image.name}`
-    }).promise()
+    await Promise.all([
+      sharp(image.tempFilePath).resize(50).toFile(`${image.tempFilePath}-${imageId}-extraSmall-${image.name}`),
+      sharp(image.tempFilePath).resize(100).toFile(`${image.tempFilePath}-${imageId}-small-${image.name}`),
+      sharp(image.tempFilePath).resize(300).toFile(`${image.tempFilePath}-${imageId}-medium-${image.name}`)
+    ])
 
-    await s3.putObject({
-      ACL: 'public-read',
-      Bucket: process.env.BUCKET_NAME,
-      Body: smallImage,
-      Key: `small-${imageId}-${image.name}`
-    }).promise()
-
-    await s3.putObject({
-      ACL: 'public-read',
-      Bucket: process.env.BUCKET_NAME,
-      Body: mediumImage,
-      Key: `medium-${imageId}-${image.name}`
-    }).promise()
-    
+    const uploadResults = await Promise.all([
+      cloudinary_upload(`${image.tempFilePath}-${imageId}-extraSmall-${image.name}`),
+      cloudinary_upload(`${image.tempFilePath}-${imageId}-small-${image.name}`),
+      cloudinary_upload(`${image.tempFilePath}-${imageId}-medium-${image.name}`),
+    ])
 
     const imageUrlObject = {
-      extraSmall: `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/extrasmall-${imageId}-${image.name}`,
-      small: `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/small-${imageId}-${image.name}`,
-      medium: `https://${process.env.BUCKET_NAME}.${process.env.DIGITALOCEAN_API}/medium-${imageId}-${image.name}`,
+      extraSmall: uploadResults[0].url,
+      small: uploadResults[1].url,
+      medium: uploadResults[2].url,
     }
 
     const response = await User.findByIdAndUpdate(myId, {imageUrl: imageUrlObject}, {
       new: true
     })
+
+    fs.unlink(image.tempFilePath, () => {})
+    fs.unlink(`${image.tempFilePath}-${imageId}-extraSmall-${image.name}`, () => {})
+    fs.unlink(`${image.tempFilePath}-${imageId}-small-${image.name}`, () => {})
+    fs.unlink(`${image.tempFilePath}-${imageId}-medium-${image.name}`, () => {})
 
     res.json({
       ok: true,

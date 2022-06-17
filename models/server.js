@@ -34,7 +34,8 @@ class Server {
         this.app.use(cors())
         this.app.use(express.json({limit: "20mb"}))
         this.app.use(fileUpload({
-            tempFileDir: "/temp"
+            useTempFiles: true,
+            tempFileDir: "upload",
         }))
 
         //Routes
