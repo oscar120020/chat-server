@@ -1,8 +1,8 @@
 const Group = require("../models/groupModel")
-const AWS = require("aws-sdk")
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
 const fs = require('fs');
+const { cloudinary_upload } = require("../helpers/cloudinary");
 
 const createGroup = async(req, res) => {
     const myId = req.uid
