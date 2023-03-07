@@ -43,7 +43,6 @@ const getMessages = async(req, res) => {
         })
     }
 
-
 }
 
 const getFoundMessages = async(req, res) => {
